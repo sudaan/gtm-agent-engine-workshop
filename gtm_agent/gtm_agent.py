@@ -108,9 +108,11 @@ def score_prospect(prospect_profile: dict, offering: dict | None = None) -> dict
     if offering is None or not _offering_has_required_fields(offering):
         return {"score": None, "error": "Cannot score without a valid offering."}
     # Score against the prospect's saved tech stack of record.
+    scored_tech_stack = prospect_profile.get("tech_stack")
     pid = prospect_profile.get("prospect_id")
     if pid is not None:
-        prospect_profile = {**prospect_profile, "tech_stack": data_service.fetch_tech_stack(pid)}
+        scored_tech_stack = data_service.fetch_tech_stack(pid)
+        prospect_profile = {**prospect_profile, "tech_stack": scored_tech_stack}
     user = (
         "Offering:\n" + json.dumps(offering, indent=2) +
         "\n\nProspect profile:\n" + json.dumps(prospect_profile, indent=2)
@@ -119,7 +121,9 @@ def score_prospect(prospect_profile: dict, offering: dict | None = None) -> dict
         {"role": "system", "content": SCORING_PROMPT},
         {"role": "user", "content": user},
     ])
-    return result.model_dump()
+    score = result.model_dump()
+    score["tech_stack"] = scored_tech_stack
+    return score
 
 
 @tool
