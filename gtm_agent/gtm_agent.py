@@ -56,6 +56,7 @@ def build_prospect_profile(prospect_id: str) -> dict:
     rec = data_service.get_prospect_record(prospect_id)
     if rec is None:
         return {"prospect_profile": None, "found": False}
+    rec = data_service.redact_prospect(rec)
     built = {
         "prospect_id": prospect_id,
         **rec,
@@ -132,7 +133,7 @@ def get_prospect(prospect_id: str) -> dict:
     # caller can pull from build_prospect_profile instead.
     contact = {
         "prospect_id": prospect_id,
-        **{k: v for k, v in record.items()
+        **{k: v for k, v in data_service.redact_prospect(record).items()
            if k not in ("engagement_history", "account_details", "tech_stack")},
     }
     return {"prospect": contact, "found": True}
